@@ -10,7 +10,7 @@ editor_options:
 
 ```{r packages}
 require(ggplot2)
-require(dplyr)
+require(tidyr)
 require(data.table)
 ```
 
@@ -25,11 +25,18 @@ TME = fread("TME_Pisaura_data.csv", header = TRUE, encoding = 'Latin-1', strings
 ## Prepare data
 
 ```{r data-preparation}
-
+#TODO maybe omit spiders that died during testing / NA values
+TMEnoNA = na.omit(TME)
 ```
 
 ## Manipulate data
 
 ```{r data-manipulation}
+#example for mean time on side for groups of different boldness levels
+mn_time_side = TMEnoNA %>%
+  mutate(boldness_groups = cut_number(boldness, n = 4)) %>%
+  group_by(boldness_groups) %>%
+  summarise(t_on_B, t_on_C)
+  
 
 ```

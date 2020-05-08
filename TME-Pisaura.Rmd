@@ -33,10 +33,11 @@ TMEnoNA = na.omit(TME)
 
 ```{r data-manipulation}
 #example for mean time on side for groups of different boldness levels
+#cur_number() chooses intervals of equal number of observations
 mn_time_side = TMEnoNA %>%
   mutate(boldness_groups = cut_number(boldness, n = 4)) %>%
   group_by(boldness_groups) %>%
-  summarise(t_on_B, t_on_C)
+  summarise(mean(t_on_B), mean(t_on_C))
   
 
 ```

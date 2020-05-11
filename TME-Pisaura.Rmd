@@ -12,6 +12,7 @@ editor_options:
 require(ggplot2)
 require(tidyr)
 require(data.table)
+require(dplyr)
 ```
 
 ## Harvest data
@@ -35,7 +36,7 @@ TMEnoNA = na.omit(TME)
 #example for mean time on side for groups of different boldness levels
 #cur_number() chooses intervals of equal number of observations
 mn_time_side = TMEnoNA %>%
-  mutate(boldness_groups = cut_number(boldness, n = 4)) %>%
+  mutate(boldness_groups = cut_number(boldness, n = 10)) %>%
   group_by(boldness_groups) %>%
   summarise(mean(t_on_B), mean(t_on_C))
   

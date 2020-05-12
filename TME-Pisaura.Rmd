@@ -28,6 +28,10 @@ TME = fread("TME_Pisaura_data.csv", header = TRUE, encoding = 'Latin-1', strings
 ```{r data-preparation}
 #TODO maybe omit spiders that died during testing / NA values
 TMEnoNA = na.omit(TME)
+names(TME)[names(TME) == "t_on_start side"] <- "t_on_start_side"
+names(TMEnoNA)[names(TMEnoNA) == "t_on_start side"] <- "t_on_start_side"
+gsub('c', 'C', TME$side_start)
+gsub('c', 'C', TMEnoNA$side_start)
 ```
 
 ## Manipulate data
@@ -40,7 +44,11 @@ mn_time_side = TMEnoNA %>%
   group_by(boldness_groups) %>%
   summarise(mean(t_on_B), mean(t_on_C))
 
-#linear regression for time on side in relation to spider individuum
+mn_side_start = TMEnoNA %>%
+  group_by(side_start) %>%
+  summarise(mean(t_on_start_side))
+
+#linear regression (which is nonsense) for time on side in relation to spider individuum
 lm_side_spider = lm(formula = t_on_B ~ id, data = TME)
 summary(lm_side_spider)
 

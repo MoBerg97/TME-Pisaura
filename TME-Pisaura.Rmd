@@ -43,4 +43,8 @@ mn_time_side = TMEnoNA %>%
 #linear regression for time on side in relation to spider individuum
 lm_side_spider = lm(formula = t_on_B ~ id, data = TME)
 summary(lm_side_spider)
+
+#relation between boldness and activity
+lm_boldness_activity = lm(formula = boldness ~ activity, data = TME)
+summary(lm_boldness_activity)
 ```

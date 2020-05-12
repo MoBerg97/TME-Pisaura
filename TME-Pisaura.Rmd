@@ -40,5 +40,5 @@ mn_time_side = TMEnoNA %>%
   group_by(boldness_groups) %>%
   summarise(mean(t_on_B), mean(t_on_C))
   
-
+#linear regression for time on side in relation to spider individuum
 ```

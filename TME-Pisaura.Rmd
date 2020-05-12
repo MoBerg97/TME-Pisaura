@@ -40,5 +40,7 @@ mn_time_side = TMEnoNA %>%
   group_by(boldness_groups) %>%
   summarise(mean(t_on_B), mean(t_on_C))
   
-
+mn_bouldness_age = TMEnoNA %>%
+  group_by(age_test) %>%
+  summarise(mean(boldness))
 ```

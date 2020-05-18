@@ -26,7 +26,7 @@ TME = fread("TME_Pisaura_data.csv", header = TRUE, encoding = 'Latin-1', strings
 ## Prepare data
 
 ```{r data-preparation}
-#TODO maybe omit spiders that died during testing / NA values
+#TODO maybe omit spiders that died during testing also in previous observations / NA values
 TMEnoNA = na.omit(TME)
 names(TME)[names(TME) == "t_on_start side"] <- "t_on_start_side"
 names(TMEnoNA)[names(TMEnoNA) == "t_on_start side"] <- "t_on_start_side"
@@ -37,8 +37,10 @@ gsub('c', 'C', TMEnoNA$side_start)
 ## Manipulate data
 
 ```{r data-manipulation}
-#example for mean time on side for groups of different boldness levels
-#cur_number() chooses intervals of equal number of observations
+# Using dplyr pipes for quick look on data.
+#     example for mean time on side for groups of different boldness levels
+#     group_by works like tapply
+#     cur_number() chooses intervals of equal number of observations
 mn_time_side = TMEnoNA %>%
   mutate(boldness_groups = cut_number(boldness, n = 10)) %>%
   group_by(boldness_groups) %>%
@@ -47,12 +49,25 @@ mn_time_side = TMEnoNA %>%
 mn_side_start = TMEnoNA %>%
   group_by(side_start) %>%
   summarise(mean(t_on_start_side))
+#############################################################################
 
-#linear regression (which is nonsense) for time on side in relation to spider individuum
-lm_side_spider = lm(formula = t_on_B ~ id, data = TME)
-summary(lm_side_spider)
+#TODO H1: Individuals spend more time on the same side in various observations
 
-#relation between boldness and activity
-lm_boldness_activity = lm(formula = boldness ~ activity, data = TME)
-summary(lm_boldness_activity)
+length(unique(TMEnoNA$id)) #no. of individuals
+
+
+
+#TODO H2: The time spend on one side is dependent on the age of a spider.
+
+
+
+#TODO H3: An individual shows similar activity and boldness over various observations.
+
+
+
+#TODO H4: Individuals show differences in activity and boldness, thus imply having a personality.
+
+
+
+
 ```

@@ -10,9 +10,13 @@ editor_options:
 
 ```{r packages}
 require(ggplot2)
-require(tidyr)
+require(tidyverse)
 require(data.table)
 require(dplyr)
+require(rstatix)
+require(ggpubr)
+require(lme4)
+require(lmerTest)
 ```
 
 ## Harvest data
@@ -26,12 +30,14 @@ TME = fread("TME_Pisaura_data.csv", header = TRUE, encoding = 'Latin-1', strings
 ## Prepare data
 
 ```{r data-preparation}
-#TODO maybe omit spiders that died during testing also in previous observations / NA values
 TMEnoNA = na.omit(TME)
 names(TME)[names(TME) == "t_on_start side"] <- "t_on_start_side"
 names(TMEnoNA)[names(TMEnoNA) == "t_on_start side"] <- "t_on_start_side"
 gsub('c', 'C', TME$side_start)
 gsub('c', 'C', TMEnoNA$side_start)
+
+TMEnoNA = TMEnoNA %>%
+  convert_as_factor(family, id, Camera, round, side_start, side_opp.)
 ```
 
 ## Manipulate data
@@ -49,16 +55,27 @@ mn_time_side = TMEnoNA %>%
 mn_side_start = TMEnoNA %>%
   group_by(side_start) %>%
   summarise(mean(t_on_start_side))
+
 #############################################################################
+#RM-ANOVA:  https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/
+#           https://www.youtube.com/watch?v=yVXsithUW9Y
+#           https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/j.1365-2435.2011.01939.x
+#Pretests
+identify_outliers(TMEnoNA, t_on_C)
+length(unique(TMEnoNA$id)) #no. of individuals
 
 #TODO H1: Individuals spend more time on the same side in various observations
 
-length(unique(TMEnoNA$id)) #no. of individuals
-
-
 
 #TODO H2: The time spend on one side is dependent on the age of a spider.
-
+TMEnoNA %>%
+  group_by(day_test) %>%
+  get_summary_stats(t_on_start_side, type = 'mean_sd')
+TMEnoNA %>%
+  group_by(day_test) %>%
+  shapiro_test(t_on_start_side)
+res.aov <- anova_test(data = TMEnoNA, dv = t_on_start_side, wid = day_test, within = id) # error
+get_anova_table(res.aov)
 
 
 #TODO H3: An individual shows similar activity and boldness over various observations.

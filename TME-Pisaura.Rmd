@@ -43,11 +43,13 @@ TMEnoNA = TMEnoNA %>%
 ## Manipulate data
 
 ```{r data-manipulation}
-#TODO H1: Activity in Personality test is different to activity in Sie-Selection test
+#TODO H1: Activity in Personality test is different to activity in Site-Selection test
 
 
 #TODO H2: The time spend on side with cue is dependent on the age of a spider (cricket boldness ontogeny Niemelä 2011).
-# model fitting to y=t_on_C, x=age_test
+#         Compare to boldness as function of age. 
+#         Data must be filtered for spiders that showed some activity
+#         when spiders have personality other factors like age should not play a significant role in behaviour control
 ggplot(data=TMEnoNA, aes(x=day_test, y=t_on_C))+
   geom_jitter(colour='grey70',position=position_jitter(0.03))+
   geom_line(aes(group=id),colour='grey70')+
@@ -60,19 +62,15 @@ ggplot(data=TMEnoNA, aes(x=activity, y=t_on_start_side, group=id,color=id))+
   geom_line()+
   theme_bw()
 
-#TODO H3: Families share similar boldness scores.
+#TODO H: Boldness and activity relate.
+
+#TODO H: An individual shows similar activity and boldness scores over various observations.
+#         This indicates personality if other factors like age etc play no significant role.
+#         DONT KNOW ANY OTHER STATISTICAL TEST FOR PERSONALITY
+
+#TODO H: Families share similar boldness and activity scores.
 ggboxplot(TMEnoNA$boldness)
 ggplot(data=TMEnoNA, aes(x=day_test, y=boldness))+
   geom_point(aes(color=family)) +
   geom_line(aes(group=id,color=family))
-
-#TODO H4: An individual shows similar activity and boldness over various observations.
-
-
-
-#TODO H5: Individuals show differences in activity and boldness, thus imply having a personality.
-
-
-
-
 ```

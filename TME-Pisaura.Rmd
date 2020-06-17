@@ -101,4 +101,6 @@ ggplot(data=TMEnoNA, aes(x=activity, y=t_on_start_side, group=id,color=id))+
   geom_line()+
   theme_bw()
 
+# TODO H: activity and or boldness correlate to the time spent on the cue side, and or to the movement parameters.
+
 ```

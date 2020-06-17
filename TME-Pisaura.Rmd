@@ -43,25 +43,7 @@ TMEnoNA = TMEnoNA %>%
 ## Manipulate data
 
 ```{r data-manipulation}
-#TODO H1: Activity in Personality test is different to activity in Site-Selection test
-
-
-#TODO H2: The time spend on side with cue is dependent on the age of a spider (cricket boldness ontogeny Niemelä 2011).
-#         Compare to boldness as function of age. 
-#         Data must be filtered for spiders that showed some activity
-#         when spiders have personality other factors like age should not play a significant role in behaviour control
-ggplot(data=TMEnoNA, aes(x=day_test, y=t_on_C))+
-  geom_jitter(colour='grey70',position=position_jitter(0.03))+
-  geom_line(aes(group=id),colour='grey70')+
-  geom_boxplot(outlier.colour='black', outlier.shape=16, alpha=0.5) +
-  stat_compare_means(comparisons=list(c(1,2),c(2,3),c(1,3)),method='t.test', label='p.signif') +
-  theme_bw()
-
-ggplot(data=TMEnoNA, aes(x=activity, y=t_on_start_side, group=id,color=id))+
-  geom_jitter(position=position_jitter(0.03))+
-  geom_line()+
-  theme_bw()
-
+## BOLDNESS AND ACTIVITY
 #TODO H: Boldness and activity relate.
 
 #TODO H: An individual shows similar activity and boldness scores over various observations.
@@ -73,4 +55,50 @@ ggboxplot(TMEnoNA$boldness)
 ggplot(data=TMEnoNA, aes(x=day_test, y=boldness))+
   geom_point(aes(color=family)) +
   geom_line(aes(group=id,color=family))
+
+## SITE SELECTION
+#TODO H: Activity in Personality test is different to activity in Site-Selection test
+#         This indicates that the application of Cue in the Testarena affects the spiders behaviour.
+
+#TODO H: The time spend on side with cue is dependent on the age of a spider (cricket boldness ontogeny Niemelä 2011).
+#         Compare to boldness as function of age. 
+#         Data must be filtered for spiders that showed some activity / willingly chose a side
+#         when spiders have personality other factors like age should not play a significant role in behaviour control
+TMEmoved = TMEnoNA %>%
+  filter(t_on_C != 0) %>%
+  filter(t_on_C != 600)
+TMEmoved2 = TMEnoNA %>%
+  filter(activity != 0)
+TMEmoved3 = TMEmoved %>%
+  filter(activity != 0)
+ggplot(data=TMEnoNA, aes(x=day_test, y=t_on_C))+
+  geom_jitter(colour='grey70',position=position_jitter(0.03))+
+  geom_line(aes(group=id),colour='grey70')+
+  geom_boxplot(outlier.colour='black', outlier.shape=16, alpha=0.5) +
+  stat_compare_means(comparisons=list(c(1,2),c(2,3),c(1,3)),method='t.test', label='p.signif') +
+  theme_bw()
+ggplot(data=TMEmoved, aes(x=day_test, y=t_on_C))+
+  geom_point(colour='grey70')+
+  geom_line(aes(group=id),colour='grey70')+
+  geom_boxplot(outlier.colour='black', outlier.shape=16, alpha=0.5) +
+  stat_compare_means(comparisons=list(c(1,2),c(2,3),c(1,3)),method='t.test', label='p.signif') +
+  theme_bw()
+ggplot(data=TMEmoved2, aes(x=day_test, y=t_on_C))+
+  geom_point(colour='grey70')+
+  geom_line(aes(group=id),colour='grey70')+
+  geom_boxplot(outlier.colour='black', outlier.shape=16, alpha=0.5) +
+  stat_compare_means(comparisons=list(c(1,2),c(2,3),c(1,3)),method='t.test', label='p.signif') +
+  theme_bw()
+ggplot(data=TMEmoved3, aes(x=day_test, y=t_on_C))+
+  geom_point(colour='grey70')+
+  geom_line(aes(group=id),colour='grey70')+
+  geom_boxplot(outlier.colour='black', outlier.shape=16, alpha=0.5) +
+  stat_compare_means(comparisons=list(c(1,2),c(2,3),c(1,3)),method='t.test', label='p.signif') +
+  theme_bw()
+
+ggplot(data=TMEnoNA, aes(x=activity, y=t_on_start_side, group=id,color=id))+
+  geom_jitter(position=position_jitter(0.03))+
+  geom_line()+
+  theme_bw()
+
 ```

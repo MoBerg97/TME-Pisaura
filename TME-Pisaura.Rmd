@@ -24,7 +24,7 @@ require(lmerTest)
 ```{r data-harvest}
 #read table
 TME = fread("TME_Pisaura_data.csv", header = TRUE, encoding = 'Latin-1', stringsAsFactors = FALSE)
-
+Etho = fread()
 ```
 
 ## Prepare data

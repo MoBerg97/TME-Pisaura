@@ -10,9 +10,9 @@ editor_options:
 
 ```{r packages}
 require(ggplot2)
+require(ggpubr)
 require(tidyverse)
 require(data.table)
-require(dplyr)
 require(rstatix)
 require(ggpubr)
 require(lme4)
@@ -37,52 +37,41 @@ gsub('c', 'C', TME$side_start)
 gsub('c', 'C', TMEnoNA$side_start)
 
 TMEnoNA = TMEnoNA %>%
-  convert_as_factor(family, id, Camera, round, side_start, side_opp.)
+  convert_as_factor(family, id, Camera, round, side_start, side_opp., day_test)
 ```
 
 ## Manipulate data
 
 ```{r data-manipulation}
-# Using dplyr pipes for quick look on data.
-#     example for mean time on side for groups of different boldness levels
-#     group_by works like tapply
-#     cur_number() chooses intervals of equal number of observations
-mn_time_side = TMEnoNA %>%
-  mutate(boldness_groups = cut_number(boldness, n = 10)) %>%
-  group_by(boldness_groups) %>%
-  summarise(mean(t_on_B), mean(t_on_C))
-
-mn_side_start = TMEnoNA %>%
-  group_by(side_start) %>%
-  summarise(mean(t_on_start_side))
-
-#############################################################################
-#RM-ANOVA:  https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/
-#           https://www.youtube.com/watch?v=yVXsithUW9Y
-#           https://besjournals.onlinelibrary.wiley.com/doi/epdf/10.1111/j.1365-2435.2011.01939.x
-#Pretests
-identify_outliers(TMEnoNA, t_on_C)
-length(unique(TMEnoNA$id)) #no. of individuals
-
 #TODO H1: Individuals spend more time on the same side in various observations
+# if an individual spends much time on one side, the chance is higher that it will spend more time on this side the next time
 
 
-#TODO H2: The time spend on one side is dependent on the age of a spider.
-TMEnoNA %>%
-  group_by(day_test) %>%
-  get_summary_stats(t_on_start_side, type = 'mean_sd')
-TMEnoNA %>%
-  group_by(day_test) %>%
-  shapiro_test(t_on_start_side)
-res.aov <- anova_test(data = TMEnoNA, dv = t_on_start_side, wid = day_test, within = id) # error
-get_anova_table(res.aov)
+#TODO H2: The time spend on side with cue is dependent on the age of a spider (cricket boldness ontogeny Niemelä 2011).
+# model fitting to y=t_on_C, x=age_test
+ggplot(data=TMEnoNA, aes(x=day_test, y=t_on_C))+
+  geom_jitter(colour='grey60',position=position_jitter(0.03))+
+  geom_line(aes(group=id),colour='grey70')+
+  geom_boxplot(outlier.colour='black', outlier.shape=16, alpha=0.5) +
+  stat_compare_means(comparisons=list(c(1,2),c(2,3),c(1,3)),method='t.test', label='p.signif') +
+  theme_bw()
+
+lm2 =lm(t_on_C ~ age_test, data=TMEnoNA)
+summary(lm2)
+#low R² so lm does not fit
 
 
-#TODO H3: An individual shows similar activity and boldness over various observations.
+#TODO H3: Families share similar boldness scores.
+ggboxplot(TMEnoNA$boldness)
+ggplot(data=TMEnoNA, aes(x=day_test, y=boldness))+
+  geom_point(aes(color=family)) +
+  geom_line(aes(group=id,color=family))
+
+#TODO H4: An individual shows similar activity and boldness over various observations.
 
 
 
-#TODO H4: Individuals show differences in activity and boldness, thus imply having a personality.
+#TODO H5: Individuals show differences in activity and boldness, thus imply having a personality.
 
 
 

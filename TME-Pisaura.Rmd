@@ -43,23 +43,22 @@ TMEnoNA = TMEnoNA %>%
 ## Manipulate data
 
 ```{r data-manipulation}
-#TODO H1: Individuals spend more time on the same side in various observations
-# if an individual spends much time on one side, the chance is higher that it will spend more time on this side the next time
+#TODO H1: Activity in Personality test is different to activity in Sie-Selection test
 
 
 #TODO H2: The time spend on side with cue is dependent on the age of a spider (cricket boldness ontogeny Niemelä 2011).
 # model fitting to y=t_on_C, x=age_test
 ggplot(data=TMEnoNA, aes(x=day_test, y=t_on_C))+
-  geom_jitter(colour='grey60',position=position_jitter(0.03))+
+  geom_jitter(colour='grey70',position=position_jitter(0.03))+
   geom_line(aes(group=id),colour='grey70')+
   geom_boxplot(outlier.colour='black', outlier.shape=16, alpha=0.5) +
   stat_compare_means(comparisons=list(c(1,2),c(2,3),c(1,3)),method='t.test', label='p.signif') +
   theme_bw()
 
-lm2 =lm(t_on_C ~ age_test, data=TMEnoNA)
-summary(lm2)
-#low R² so lm does not fit
-
+ggplot(data=TMEnoNA, aes(x=activity, y=t_on_start_side, group=id,color=id))+
+  geom_jitter(position=position_jitter(0.03))+
+  geom_line()+
+  theme_bw()
 
 #TODO H3: Families share similar boldness scores.
 ggboxplot(TMEnoNA$boldness)

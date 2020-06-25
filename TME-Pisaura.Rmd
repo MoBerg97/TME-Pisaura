@@ -45,7 +45,28 @@ TMEnoNA = TMEnoNA %>%
 ```{r data-manipulation}
 ## BOLDNESS AND ACTIVITY
 #TODO H: Boldness and activity relate.
-
+ggplot(TMEnoNA,aes(activity,boldness))+
+  geom_point()+
+  geom_smooth(method='gam')
+summary(mgcv::gam(TMEnoNA$boldness~s(TMEnoNA$activity, bs = "cs")))
+#for each day_test so individuals appear only once at approx same age
+day1 = filter(TMEnoNA,day_test==1)
+ggplot(day1,aes(activity,boldness))+
+  geom_point()+
+  geom_smooth(method='gam')
+summary(mgcv::gam(day1$boldness~s(day1$activity, bs = "cs")))
+day2 = filter(TMEnoNA,day_test==2)
+ggplot(day2,aes(activity,boldness))+
+  geom_point()+
+  geom_smooth(method='gam')
+summary(mgcv::gam(day2$boldness~s(day2$activity, bs = "cs")))
+day3 = filter(TMEnoNA,day_test==3)
+ggplot(day3,aes(activity,boldness))+
+  geom_point()+
+  geom_smooth(method='gam')
+summary(mgcv::gam(day3$boldness~s(day3$activity, bs = "cs")))
+#correlation test
+cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="pearson")
 #TODO H: An individual shows similar activity and boldness scores over various observations.
 #         This indicates personality if other factors like age etc play no significant role.
 #         DONT KNOW ANY OTHER STATISTICAL TEST FOR PERSONALITY

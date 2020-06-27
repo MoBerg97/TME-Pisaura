@@ -47,7 +47,15 @@ names(Etho1) <- names(Etho4)
 names(Etho2) <- names(Etho4)
 names(Etho3) <- names(Etho4)
 Etho <- rbind(Etho1, Etho2, Etho3, Etho4) %>%
-  na.omit()
+  na.omit() %>%
+  filter(Mobile!='-')%>%
+  as.data.table()
+varnms <- names(Etho[,15:26])
+Etho[ , (varnms) := lapply(.SD, function(x) gsub(',', '.', x)), .SDcol = varnms ]
+Etho[, (varnms) := lapply(.SD, as.numeric), .SDcols= varnms]
+Etho <- na.omit(Etho)
+Etho[, (varnms) := lapply(.SD, function(x) round(x, digits = 3)), .SDcols= varnms]
+
 ```
 
 ## Manipulate data

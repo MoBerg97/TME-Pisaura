@@ -24,7 +24,10 @@ require(lmerTest)
 ```{r data-harvest}
 #read table
 TME = fread("TME_Pisaura_data.csv", header = TRUE, encoding = 'Latin-1', stringsAsFactors = FALSE)
-Etho = fread()
+Etho1 = fread('Pisaura Ethovision 1.csv', header =TRUE, encoding = 'Latin-1', stringsAsFactors = FALSE)
+Etho2 = fread('Pisaura Ethovision 2.csv', header =TRUE, encoding = 'Latin-1', stringsAsFactors = FALSE)
+Etho3 = fread('Pisaura Ethovision 3.csv', header =TRUE, encoding = 'Latin-1', stringsAsFactors = FALSE)
+Etho4 = fread('Pisaura Ethovision 4.csv', header =TRUE, encoding = 'Latin-1', stringsAsFactors = FALSE)
 ```
 
 ## Prepare data
@@ -38,6 +41,13 @@ gsub('c', 'C', TMEnoNA$side_start)
 
 TMEnoNA = TMEnoNA %>%
   convert_as_factor(family, id, Camera, round, side_start, side_opp., day_test)
+
+Etho4 <- select(Etho4, -'seconds blank',-'seconds cue')
+names(Etho1) <- names(Etho4)
+names(Etho2) <- names(Etho4)
+names(Etho3) <- names(Etho4)
+Etho <- rbind(Etho1, Etho2, Etho3, Etho4) %>%
+  na.omit()
 ```
 
 ## Manipulate data
@@ -61,18 +71,19 @@ ggplot(day2,aes(activity,boldness))+
   geom_smooth(method='gam')
 summary(mgcv::gam(day2$boldness~s(day2$activity, bs = "cs")))
 day3 = filter(TMEnoNA,day_test==3)
-ggplot(day3,aes(activity,boldness))+
   geom_point()+
+ggplot(day3,aes(activity,boldness))+
   geom_smooth(method='gam')
 summary(mgcv::gam(day3$boldness~s(day3$activity, bs = "cs")))
 #correlation test
 cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="pearson")
+
 #TODO H: An individual shows similar activity and boldness scores over various observations.
 #         This indicates personality if other factors like age etc play no significant role.
 #         DONT KNOW ANY OTHER STATISTICAL TEST FOR PERSONALITY
 
 #TODO H: Families share similar boldness and activity scores.
-ggboxplot(TMEnoNA$boldness)
+ggboxplot(TMEnoNA$boldness) + ylab('boldness-score') + xlab('')
 ggplot(data=TMEnoNA, aes(x=day_test, y=boldness))+
   geom_point(aes(color=family)) +
   geom_line(aes(group=id,color=family))

@@ -55,7 +55,6 @@ Etho[ , (varnms) := lapply(.SD, function(x) gsub(',', '.', x)), .SDcol = varnms 
 Etho[, (varnms) := lapply(.SD, as.numeric), .SDcols= varnms]
 Etho <- na.omit(Etho)
 Etho[, (varnms) := lapply(.SD, function(x) round(x, digits = 3)), .SDcols= varnms]
-
 ```
 
 ## Manipulate data
@@ -63,6 +62,24 @@ Etho[, (varnms) := lapply(.SD, function(x) round(x, digits = 3)), .SDcols= varnm
 ```{r data-manipulation}
 ## BOLDNESS AND ACTIVITY
 #TODO H: Boldness and activity relate.
+#shapiro test
+# significant difference from normally distribution when p<0,05
+shapiro.test(TMEnoNA$activity)
+ggqqplot(TMEnoNA$activity)
+shapiro.test(TMEnoNA$boldness)
+ggqqplot(TMEnoNA$boldness)
+#pearson correlation senseless when not normally distributed --> spearman, kendall
+cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="spearman")
+cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="kendall")
+ggscatter(TMEnoNA, x = "activity", y = "boldness",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "spearman",
+          xlab = "Activity", ylab = "boldness-score")
+ggscatter(TMEnoNA, x = "activity", y = "boldness",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "kendall",
+          xlab = "Activity", ylab = "boldness-score")
+#GAM Modelling for better fit
 ggplot(TMEnoNA,aes(activity,boldness))+
   geom_point()+
   geom_smooth(method='gam')
@@ -83,8 +100,6 @@ day3 = filter(TMEnoNA,day_test==3)
 ggplot(day3,aes(activity,boldness))+
   geom_smooth(method='gam')
 summary(mgcv::gam(day3$boldness~s(day3$activity, bs = "cs")))
-#correlation test
-cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="pearson")
 
 #TODO H: An individual shows similar activity and boldness scores over various observations.
 #         This indicates personality if other factors like age etc play no significant role.

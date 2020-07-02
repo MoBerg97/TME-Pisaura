@@ -150,10 +150,16 @@ summary(mgcv::gam(day3$boldness~s(day3$activity, bs = "cs")))
 #
 # SAME WITH skew-adjusted activity and boldness
 #
-cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="pearson")
 
+cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="pearson")
+ggplot(TMEnoNA,aes(activity,boldness))+
+  geom_point()+
+  geom_smooth(method='gam')
+summary(mgcv::gam(TMEnoNA$boldness~s(TMEnoNA$activity, bs = "cs")))
 
 # do individuals keep their values the same in repeated measures
+# day_test as moderator variable and check if moderator variable has no effect --> then the activity and boldness stayed the same for individuals
+# or repeated-measures ANOVA?
 ```
 
 ```{r H2-testing}

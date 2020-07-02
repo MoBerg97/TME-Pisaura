@@ -19,6 +19,8 @@ require(lme4)
 require(lmerTest)
 require(ez)
 require(mvnormtest)
+require(psych)
+require(moments)
 ```
 
 ## Harvest data
@@ -57,21 +59,63 @@ Etho[ , (varnms) := lapply(.SD, function(x) gsub(',', '.', x)), .SDcol = varnms 
 Etho[, (varnms) := lapply(.SD, as.numeric), .SDcols= varnms]
 Etho <- na.omit(Etho)
 Etho[, (varnms) := lapply(.SD, function(x) round(x, digits = 3)), .SDcols= varnms]
+
+
+#long format with only important columns
+TMElong <- TME %>%
+  select(id, boldness, activity, day_test, t_on_C) %>%
+  melt(id.vars = c('id','day_test'), measure.vars=c('boldness','activity','t_on_C'))
 ```
 
 ## Manipulate data
 
-```{r data-manipulation}
+```{r adjust skewness}
+#adjust skewness
+skewness(TMEnoNA$boldness)
+ggdensity(TMEnoNA, x = "boldness", fill = "lightgray", title = "boldness") +
+  scale_x_continuous(limits = c(0, 600)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+skewness(TMEnoNA$activity)
+ggdensity(TMEnoNA, x = "activity", fill = "lightgray", title = "activity") +
+  scale_x_continuous(limits = c(0, 600)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+#boldness is negatively skewed --> mode > median > mean
+#activity is positively skewed
+TMEnoNA <- TMEnoNA %>%
+  mutate(nombold=log10(max(boldness+1) - boldness),
+         nomact=sqrt(activity))
+TMEnoNA <- TMEnoNA[,lapply(TMEnoNA, function(x) x[is.finite(x)])]
+shapiro.test(TMEnoNA$nombold)
+skewness(TMEnoNA$nombold)
+ggqqplot(TMEnoNA$nombold) 
+ggdensity(TMEnoNA, x = "nombold", fill = "lightgray", title = "nombold") +
+  scale_x_continuous(limits = c(0, 2.8)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+shapiro.test(TMEnoNA$nomact)
+ks.test(TMEnoNA)
+skewness(TMEnoNA$nomact)
+ggqqplot(TMEnoNA$nomact)
+ggdensity(TMEnoNA, x = "nomact", fill = "lightgray", title = "nomact") +
+  scale_x_continuous(limits = c(0, 8)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+```
+
+```{r H1-testing}
 ## BOLDNESS AND ACTIVITY
-#TODO H: Boldness and activity relate.
+#H1: Boldness and activity relate.
+
+#
+# FIRST WITH non-adjusted activity and boldness
+#
+
 #shapiro test
 # significant difference from normally distribution when p<0,05
 shapiro.test(TMEnoNA$activity)
 ggqqplot(TMEnoNA$activity)
 shapiro.test(TMEnoNA$boldness)
 ggqqplot(TMEnoNA$boldness)
-#pearson correlation senseless when not normally distributed --> spearman, kendall
-cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="spearman")
+#no normal distribution for activity or boldness given
+#pearson correlation senseless when not normally distributed --> kendall
 cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="kendall")
 ggscatter(TMEnoNA, x = "activity", y = "boldness",
           add = "reg.line", conf.int = TRUE,
@@ -103,22 +147,90 @@ ggplot(day3,aes(activity,boldness))+
   geom_smooth(method='gam')
 summary(mgcv::gam(day3$boldness~s(day3$activity, bs = "cs")))
 
+#
+# SAME WITH skew-adjusted activity and boldness
+#
+cor.test(TMEnoNA$activity, TMEnoNA$boldness, method="pearson")
+
+
+# do individuals keep their values the same in repeated measures
+```
+
+```{r H2-testing}
+#H2: test if there is a significant difference between our tonCeffect compared to a normally distribution with mean of 1 (and maybe sd of our tonCeffect)
+
+TMEnoNA <- TMEnoNA %>%
+  mutate(tonCeffect = t_on_C/300)
+day1 <- TMEnoNA %>%
+  filter(day_test == 1)
+day2 <- TMEnoNA %>%
+  filter(day_test == 2)
+day3 <- TMEnoNA %>%
+  filter(day_test ==3)
+
+summary(day1$tonCeffect)
+summary(day2$tonCeffect)
+summary(day3$tonCeffect)
+
+#T.Test : is
+t.test(TMEnoNA$t_on_C, mu=300)
+t.test(day1$t_on_C, mu=300)
+#day 1 --> p<0,05
+t.test(day2$t_on_C, mu=300)
+t.test(day3$t_on_C, mu=300)
+
+```
+
+```{r H3-testing}
+#H3:
+res.man <- manova(cbind(activity, boldness)~tonCeffect,data=TMEnoNA)
+summary.aov(res.man)
+res.man1 <- manova(cbind(activity, boldness)~tonCeffect,data=day1)
+summary.aov(res.man1)
+res.man2 <- manova(cbind(activity, boldness)~tonCeffect,data=day2)
+summary.aov(res.man2)
+res.man3 <- manova(cbind(activity, boldness)~tonCeffect,data=day3)
+summary.aov(res.man3)
+TMEmean <- TMEnoNA %>%
+  group_by(id) %>%
+  summarize(tonCeffect = mean(tonCeffect),
+            boldness = mean(boldness),
+            activity = mean(activity))
+res.man4 <- manova(cbind(activity, boldness)~tonCeffect,data=TMEmean)
+summary.aov(res.man4)
+
+#chisq makes no sense because no discrete variable
+chisq.test(TMEmean$activity, TMEmean$tonCeffect)
+chisq.test(TMEmean$boldness, TMEmean$tonCeffect)
+
+```
+
+```{r H4-testing}
+#H4 do spiders of same heritage show similiar scores in activity boldness or tonCeffect
+
+#MANOVA: does family have an effect on the variance of activity, boldness or tonCeffect?
+res.man_H4 <- manova(cbind(activity,boldness,tonCeffect)~family, TMEnoNA)
+summary.aov(res.man_H4)
+#there is an significant effect on the variance of activity between family groups
+```
+
+```{r excluded}
 # #TODO H: An individual shows similar activity and boldness scores over various observations.
 # #         This indicates personality if other factors like age etc play no significant role.
 # #         DONT KNOW ANY OTHER STATISTICAL TEST FOR PERSONALITY
-# 
+#
 #TODO H: Families share similar boldness and activity scores.
 # ggboxplot(TMEnoNA$boldness) + ylab('boldness-score') + xlab('')
 # ggplot(data=TMEnoNA, aes(x=day_test, y=boldness))+
 #   geom_point(aes(color=family)) +
 #   geom_line(aes(group=id,color=family))
-# 
+#
 # ## SITE SELECTION
 # #TODO H: Activity in Personality test is different to activity in Site-Selection test
 # #         This indicates that the application of Cue in the Testarena affects the spiders behaviour.
-# 
+#
 # #TODO H: The time spend on side with cue is dependent on the age of a spider (cricket boldness ontogeny Niemelä 2011).
-# #         Compare to boldness as function of age. 
+# #         Compare to boldness as function of age.
 # #         Data must be filtered for spiders that showed some activity / willingly chose a side
 # #         when spiders have personality other factors like age should not play a significant role in behaviour control
 # TMEmoved = TMEnoNA %>%
@@ -152,51 +264,11 @@ summary(mgcv::gam(day3$boldness~s(day3$activity, bs = "cs")))
 #   geom_boxplot(outlier.colour='black', outlier.shape=16, alpha=0.5) +
 #   stat_compare_means(comparisons=list(c(1,2),c(2,3),c(1,3)),method='t.test', label='p.signif') +
 #   theme_bw()
-# 
+#
 # ggplot(data=TMEnoNA, aes(x=activity, y=t_on_start_side, group=id,color=id))+
 #   geom_jitter(position=position_jitter(0.03))+
 #   geom_line()+
 #   theme_bw()
-# 
+#
 # # TODO H: activity and or boldness correlate to the time spent on the cue side, and or to the movement parameters
-
-#H2: test if there is a significant difference between our tonCeffect compared to a normally distribution with mean of 1 (and maybe sd of our tonCeffect)
-
-
-TMEnoNA <- TMEnoNA %>%
-  mutate(tonCeffect = t_on_C/300)
-TMEday1 <- TMEnoNA %>%
-  filter(day_test == 1)
-TMEday2 <- TMEnoNA %>%
-  filter(day_test == 2)
-TMEday3 <- TMEnoNA %>%
-  filter(day_test ==3)
-
-summary(TMEday1$tonCeffect)
-summary(TMEday2$tonCeffect)
-summary(TMEday3$tonCeffect)
-
-#H3:
-res.man <- manova(cbind(activity, boldness)~tonCeffect,data=TMEnoNA)
-summary.aov(res.man)
-res.man1 <- manova(cbind(activity, boldness)~tonCeffect,data=TMEday1)
-summary.aov(res.man1)
-res.man2 <- manova(cbind(activity, boldness)~tonCeffect,data=TMEday2)
-summary.aov(res.man2)
-res.man3 <- manova(cbind(activity, boldness)~tonCeffect,data=TMEday3)
-summary.aov(res.man3)
-TMEmean <- TMEnoNA %>%
-  group_by(id) %>%
-  summarize(tonCeffect = mean(tonCeffect),
-            boldness = mean(boldness),
-            activity = mean(activity))
-res.man4 <- manova(cbind(activity, boldness)~tonCeffect,data=TMEmean)
-summary.aov(res.man4)
-
-#chisq makes no sense because no discrete variable
-chisq.test(TMEmean$activity, TMEmean$tonCeffect)
-chisq.test(TMEmean$boldness, TMEmean$tonCeffect)
-
-#H4 do spiders of same heritage show similiar scores in activity boldness or tonCeffect
-
 ```

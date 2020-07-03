@@ -11,9 +11,9 @@ editor_options:
 ```{r packages}
 require(ggplot2)
 require(ggpubr)
-require(tidyverse)
 require(data.table)
 require(rstatix)
+require(tidyverse)
 require(ggpubr)
 require(lme4)
 require(lmerTest)
@@ -37,15 +37,16 @@ Etho4 = fread('Pisaura Ethovision 4.csv', header =TRUE, encoding = 'Latin-1', st
 ## Prepare data
 
 ```{r data-preparation}
+#TME is body data and manual Site Selection and Personality
 TMEnoNA = na.omit(TME)
 names(TME)[names(TME) == "t_on_start side"] <- "t_on_start_side"
 names(TMEnoNA)[names(TMEnoNA) == "t_on_start side"] <- "t_on_start_side"
 gsub('c', 'C', TME$side_start)
 gsub('c', 'C', TMEnoNA$side_start)
-
 TMEnoNA = TMEnoNA %>%
   convert_as_factor(family, id, Camera, round, side_start, side_opp., day_test)
 
+#Ethovision data read in and gather
 Etho4 <- select(Etho4, -'seconds blank',-'seconds cue')
 names(Etho1) <- names(Etho4)
 names(Etho2) <- names(Etho4)
@@ -59,12 +60,39 @@ Etho[ , (varnms) := lapply(.SD, function(x) gsub(',', '.', x)), .SDcol = varnms 
 Etho[, (varnms) := lapply(.SD, as.numeric), .SDcols= varnms]
 Etho <- na.omit(Etho)
 Etho[, (varnms) := lapply(.SD, function(x) round(x, digits = 3)), .SDcols= varnms]
+#
+#Etho and TME merge to data.frame 'dt'
+#TODO: maybe better to only keep important columns (Movement related) in Etho data before merge
 
+unique(TME$id) %in% unique(Etho$id) #check if IDs match, yes they do
+#change day_test to week and both week columns to factor 
+TME$week <- as.factor(TME$day_test)
+Etho$week <- as.factor(as.integer(Etho$week))
+#merge the tables by id and week
+dt <- left_join(TME, Etho, by=c('id','week'))
+
+#change column names blank spaces to underscores
+names(dt) <- gsub(' ', '_', names(dt))
+names(dt) <- gsub('__', '_', names(dt))
+
+# TODO: maybe sort out values where Ethovision data does not fit to manual data?
+# TODO: maybe sort out unreasonable values of velocity
+unique(dt$Zone)
+dt <- dt %>%
+  mutate(Zone <- case_when(Zone == 'In cue' ~ 'cue',
+                           Zone == 'In blank' ~ 'blank')) #%>%
+  # filter(Velocity_Mean<100) %>%
+  #this deletes 9 observations
+  # filter((Zone=='blank' & In_blank_s < 1.2*t_on_C) | (Zone=='cue' & In_cue_s < 1.2*t_on_B))
+  #this deletes 2400 observations
 
 #long format with only important columns
-TMElong <- TME %>%
-  select(id, boldness, activity, day_test, t_on_C) %>%
-  melt(id.vars = c('id','day_test'), measure.vars=c('boldness','activity','t_on_C'))
+#here select all variables included in long format:
+vars <- c('id','boldness','activity','week','t_on_C','t_on_B','Highly_mobile','Immobile','Mobile','Mobility_Mean_%')
+dtl <- dt %>%
+  select(vars) %>%
+  melt(id.vars = c('id','week'), measure.vars=c('boldness','activity','t_on_C')) %>%
+  arrange(id)
 ```
 
 ## Manipulate data
